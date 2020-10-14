@@ -11,6 +11,7 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:cab_rider/branb_colour.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../widgets/brand_divider.dart';
 import '../widgets/round_button.dart';
 import '../constants/contants.dart';
@@ -36,7 +37,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   double mapBottompadding = 0;
   double bottomBoxHeight = Platform.isAndroid ? 260 : 280;
   double riderDetailsSheetHeight = 0;
-  bool drawerOpen=true;
+  double cancelRideSheetHeight = 0;
+  double requestingSheetHeight = 0;
+  bool drawerOpen = true;
 
   LocationData currentLocation;
   LocationData destinationLocation;
@@ -95,10 +98,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       var thisDetails = await HelperMethod.getDirectionDetials(
           pickupLatLng, destinationLatLng);
 
-
       setState(() {
         tripDirectionDetials = thisDetails;
-        drawerOpen=false;
+        drawerOpen = false;
       });
 
       //print(thisDetails.encodePoints.codeUnits.toString());
@@ -201,20 +203,28 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     });
   }
 
-  void resetSearch(){
-
+  void resetSearch() {
     setState(() {
       polyCoordinates.clear();
       _polyLines.clear();
       _marker.clear();
       _circle.clear();
-      riderDetailsSheetHeight=0;
+      riderDetailsSheetHeight = 0;
       bottomBoxHeight = Platform.isAndroid ? 260 : 280;
       mapBottompadding = Platform.isAndroid ? 280 : 270;
-      drawerOpen=true;
+      drawerOpen = true;
       setUpPositionLocator();
     });
+  }
 
+  void showRequestingSheet(){
+
+    setState(() {
+      riderDetailsSheetHeight = 0;
+      requestingSheetHeight = Platform.isAndroid ? 195 : 220;
+      mapBottompadding = Platform.isAndroid ? 280 : 270;
+      drawerOpen = true;
+    });
 
   }
 
@@ -319,7 +329,6 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 mapBottompadding = Platform.isAndroid ? 280 : 270;
               });
               setUpPositionLocator();
-
             },
           ),
 
@@ -329,7 +338,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
             left: 20,
             child: GestureDetector(
               onTap: () {
-                    drawerOpen ? _scaffoldKey.currentState.openDrawer() : resetSearch();
+                drawerOpen
+                    ? _scaffoldKey.currentState.openDrawer()
+                    : resetSearch();
               },
               child: Container(
                 decoration: BoxDecoration(
@@ -349,7 +360,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                   backgroundColor: Colors.white,
                   radius: 20,
                   child: Icon(
-                   drawerOpen == true ? Icons.menu : Icons.arrow_back,
+                    drawerOpen == true ? Icons.menu : Icons.arrow_back,
                     color: Colors.black,
                   ),
                 ),
@@ -403,7 +414,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                         onTap: () async {
                           var res = await Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SearchPage()),
+                            MaterialPageRoute(
+                                builder: (context) => SearchPage()),
                           );
                           //if(res == 'getdirection')
                           //{
@@ -454,13 +466,14 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(Provider.of<AppData>(context).pickUpAddress !=
-                                      null
-                                  ? Provider.of<AppData>(context)
-                                      .pickUpAddress
-                                      .placeAddress
-                                      .substring(0, 40)
-                                  : 'Add Home'),
+                              Text(
+                                  Provider.of<AppData>(context).pickUpAddress !=
+                                          null
+                                      ? Provider.of<AppData>(context)
+                                          .pickUpAddress
+                                          .placeAddress
+                                          .substring(0, 40)
+                                      : 'Add Home'),
                               Text(
                                 'Yor residence address',
                                 style: TextStyle(
@@ -568,7 +581,11 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                               fontFamily: 'BoltSemi'),
                                         ),
                                         Text(
-                                          tripDirectionDetials!= null ?  tripDirectionDetials.distanceText.toString() : "0",
+                                          tripDirectionDetials != null
+                                              ? tripDirectionDetials
+                                                  .distanceText
+                                                  .toString()
+                                              : "0",
                                           style: TextStyle(
                                               fontSize: 15,
                                               fontFamily: 'BoltSemi'),
@@ -577,7 +594,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                                     ),
                                     Expanded(child: Container()),
                                     Text(
-                                      tripDirectionDetials!= null ?  'Rs: ${HelperMethod.estimateFare(tripDirectionDetials).toString()}' : "0",
+                                      tripDirectionDetials != null
+                                          ? 'Rs: ${HelperMethod.estimateFare(tripDirectionDetials).toString()}'
+                                          : "0",
                                       style: TextStyle(
                                           fontSize: 15, fontFamily: 'BoltSemi'),
                                     ),
@@ -586,44 +605,114 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                          SizedBox(height: 10,),
+                          SizedBox(
+                            height: 10,
+                          ),
                           Padding(
                             padding: EdgeInsets.all(10),
                             child: Row(
                               children: [
-                                Icon(FontAwesomeIcons.creditCard,size: 18,color: BrandColors.colorTextLight,),
+                                Icon(
+                                  FontAwesomeIcons.creditCard,
+                                  size: 18,
+                                  color: BrandColors.colorTextLight,
+                                ),
                                 SizedBox(
                                   width: 16,
                                 ),
                                 Text(
                                   'CASH',
                                   style: TextStyle(
-                                      fontSize: 15,
-                                      fontFamily: 'BoltSemi'),
+                                      fontSize: 15, fontFamily: 'BoltSemi'),
                                 ),
                                 SizedBox(
                                   width: 5,
                                 ),
-                                Icon(Icons.keyboard_arrow_down,size: 18,color: BrandColors.colorTextLight,),
+                                Icon(
+                                  Icons.keyboard_arrow_down,
+                                  size: 18,
+                                  color: BrandColors.colorTextLight,
+                                ),
                               ],
                             ),
                           ),
-                          SizedBox(height: 10,),
+                          SizedBox(
+                            height: 10,
+                          ),
                           Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16,horizontal: 16),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 16, horizontal: 16),
                             child: RoundButton(
-                                'REQUEST CAB',
-                              BrandColors.colorGreen,
-                                (){}
-
-                            ),
+                                'REQUEST CAB', BrandColors.colorGreen, () {
+                                  showRequestingSheet();
+                            }),
                           )
                         ],
                       ),
                     ),
-
-
                   ],
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: AnimatedSize(
+              vsync: this,
+              duration: Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: Container(
+                  height: requestingSheetHeight,
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(15),
+                        topRight: Radius.circular(15),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          spreadRadius: .5,
+                          blurRadius: .5,
+                          offset: Offset(.7, .7),
+                        )
+                      ]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        height: 10,
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextLiquidFill(
+                          text: 'Requesting a ride ...',
+                          waveColor: BrandColors.colorTextSemiLight,
+                          boxBackgroundColor: Colors.white,
+                          textStyle: TextStyle(
+                              fontSize: 22.0,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'BoldSemi'),
+                          boxHeight: 40.0,
+                        ),
+                      ),
+                      Container(
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          border: Border.all(width: 1,color: BrandColors.colorLightGrayFair)
+                        ),
+                        child: Icon(Icons.close,size: 25,),
+                      ),
+                      Text('Cancel Ride',style: TextStyle(fontSize: 13), )
+                    ],
+                  ),
                 ),
               ),
             ),
