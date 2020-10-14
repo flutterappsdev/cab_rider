@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "928813346912",
+    "firebase_url": "https://vtaxi-6b58b.firebaseio.com",
+    "project_id": "vtaxi-6b58b",
+    "storage_bucket": "vtaxi-6b58b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928813346912:android:bea5fba7aabb31245d5305",
+        "android_client_info": {
+          "package_name": "com.flutterdev.cab_rider"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "928813346912-tuup1laj71eknvbthnrj4bq7pcidojmt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM9WJIouMbrIkQrylFkC2Zg5VfofLGxgA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "928813346912-tuup1laj71eknvbthnrj4bq7pcidojmt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
