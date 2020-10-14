@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cab_rider/screens/searchpage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:outline_material_icons/outline_material_icons.dart';
 import 'package:location/location.dart';
@@ -10,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:cab_rider/branb_colour.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import '../widgets/brand_divider.dart';
+import '../widgets/round_button.dart';
 import '../constants/contants.dart';
 import '../helpers/helper_methods.dart';
 import '../dataprovoder/appdata.dart';
@@ -39,6 +41,8 @@ class _MainPageState extends State<MainPage> {
 
   List<LatLng> polyCoordinates = [];
   Set<Polyline> _polyLines = {};
+  Set<Marker> _marker = {};
+  Set<Circle> _circle = {};
 
   @override
   void initState() {
@@ -60,7 +64,7 @@ class _MainPageState extends State<MainPage> {
       CameraPosition cp = CameraPosition(target: pos, zoom: 14);
       mapController.animateCamera(CameraUpdate.newCameraPosition(cp));
 
-      String address = await HelperMethod.getLatLangAddres(pos,context);
+      String address = await HelperMethod.getLatLangAddres(pos, context);
 
       //print(address);
       //print(Provider.of<AppData>(context).pickUpAddress.placeAddress);
@@ -71,68 +75,108 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<void> getDirections() async {
-
     try {
-      var pickup = Provider.of<AppData>(context,listen: false).pickUpAddress;
-      var destination = Provider.of<AppData>(context,listen: false).destinatinAddress;
+      var pickup = Provider.of<AppData>(context, listen: false).pickUpAddress;
+      var destination =
+          Provider.of<AppData>(context, listen: false).destinatinAddress;
 
-     // print('pickup  ${pickup.longitude}');
+      // print('pickup  ${pickup.longitude}');
       //print('destination  ${destination.longitude}');
 
-      var pickupLatLng = LatLng(pickup.latitude,pickup.longitude);
-      var destinationLatLng = LatLng(destination.latitude,destination.longitude);
+      var pickupLatLng = LatLng(pickup.latitude, pickup.longitude);
+      var destinationLatLng =
+          LatLng(destination.latitude, destination.longitude);
 
-      var thisDetails = await HelperMethod.getDirectionDetials(pickupLatLng, destinationLatLng);
+      var thisDetails = await HelperMethod.getDirectionDetials(
+          pickupLatLng, destinationLatLng);
 
       //print(thisDetails.encodePoints.codeUnits.toString());
 
       PolylinePoints _polyLinePoint = PolylinePoints();
-      List<PointLatLng> result = _polyLinePoint.decodePolyline(thisDetails.encodePoints);
-      if(result.isNotEmpty){
+      List<PointLatLng> result =
+          _polyLinePoint.decodePolyline(thisDetails.encodePoints);
+      if (result.isNotEmpty) {
         result.forEach((PointLatLng element) {
-          polyCoordinates.add(LatLng(element.latitude,element.longitude));
+          polyCoordinates.add(LatLng(element.latitude, element.longitude));
         });
       }
       //_polyLines.clear();
       setState(() {
         PolylineId id = PolylineId("poly");
         Polyline polyline = Polyline(
-            polylineId: id, color: Color.fromARGB(255, 95, 109, 237), points: polyCoordinates,
+            polylineId: id,
+            color: Color.fromARGB(255, 95, 109, 237),
+            points: polyCoordinates,
             jointType: JointType.round,
             width: 4,
             startCap: Cap.roundCap,
-            endCap: Cap.roundCap
-        );
+            endCap: Cap.roundCap);
         _polyLines.add(polyline);
       });
 
       LatLngBounds bounds;
-      if(pickupLatLng.latitude > destinationLatLng.latitude && pickupLatLng.longitude > destinationLatLng.longitude)
-        {
-          bounds = LatLngBounds(southwest: destinationLatLng,northeast: pickupLatLng);
-        }
-      else if(pickupLatLng.longitude > destinationLatLng.longitude)
-        {
-          bounds = LatLngBounds(
-            southwest: LatLng(pickupLatLng.latitude,destinationLatLng.longitude),
-            northeast: LatLng(destinationLatLng.latitude,pickupLatLng.longitude),
-          );
-        }
-      else if(pickupLatLng.latitude > destinationLatLng.latitude)
-      {
+      if (pickupLatLng.latitude > destinationLatLng.latitude &&
+          pickupLatLng.longitude > destinationLatLng.longitude) {
+        bounds =
+            LatLngBounds(southwest: destinationLatLng, northeast: pickupLatLng);
+      } else if (pickupLatLng.longitude > destinationLatLng.longitude) {
         bounds = LatLngBounds(
-          southwest: LatLng(destinationLatLng.latitude,pickupLatLng.longitude),
-          northeast: LatLng(pickupLatLng.latitude,destinationLatLng.longitude),
+          southwest: LatLng(pickupLatLng.latitude, destinationLatLng.longitude),
+          northeast: LatLng(destinationLatLng.latitude, pickupLatLng.longitude),
         );
+      } else if (pickupLatLng.latitude > destinationLatLng.latitude) {
+        bounds = LatLngBounds(
+          southwest: LatLng(destinationLatLng.latitude, pickupLatLng.longitude),
+          northeast: LatLng(pickupLatLng.latitude, destinationLatLng.longitude),
+        );
+      } else {
+        bounds =
+            LatLngBounds(southwest: pickupLatLng, northeast: destinationLatLng);
       }
-      else{
-        bounds = LatLngBounds(southwest: pickupLatLng,northeast: destinationLatLng);
-      }
-
       mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 70));
-    }
-    catch(e)
-    {
+
+      Marker pickupmarker = Marker(
+        markerId: MarkerId('piclup'),
+        position: pickupLatLng,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        infoWindow:
+            InfoWindow(title: pickup.placeAddress, snippet: 'My Location'),
+      );
+
+      Marker destinamarker = Marker(
+        markerId: MarkerId('destim'),
+        position: destinationLatLng,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: InfoWindow(
+            title: destination.placeAddress, snippet: ' Destination'),
+      );
+
+      setState(() {
+        _marker.add(pickupmarker);
+        _marker.add(destinamarker);
+      });
+
+      Circle pickupcircle = Circle(
+          circleId: CircleId('pichup'),
+          strokeColor: Colors.green,
+          strokeWidth: 4,
+          radius: 15,
+          center: pickupLatLng,
+          fillColor: BrandColors.colorGreen);
+
+      Circle desticircle = Circle(
+          circleId: CircleId('desti'),
+          strokeColor: Colors.purple,
+          strokeWidth: 4,
+          radius: 15,
+          center: pickupLatLng,
+          fillColor: BrandColors.colorAccentPurple);
+
+      setState(() {
+        _circle.add(pickupcircle);
+        _circle.add(desticircle);
+      });
+    } catch (e) {
       print('get derstion error $e');
     }
   }
@@ -228,6 +272,8 @@ class _MainPageState extends State<MainPage> {
             zoomGesturesEnabled: true,
             mapType: MapType.normal,
             polylines: _polyLines,
+            markers: _marker,
+            circles: _circle,
             initialCameraPosition: MainPage._kGooglePlex,
             onMapCreated: (GoogleMapController controller) {
               _controller.complete(controller);
@@ -314,13 +360,15 @@ class _MainPageState extends State<MainPage> {
                     ),
                     GestureDetector(
                       onTap: () async {
-                        var res = await  Navigator.push(context, MaterialPageRoute(builder: (context)=>SearchPage()),);
+                        var res = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SearchPage()),
+                        );
                         //if(res == 'getdirection')
-                          //{
-                            getDirections();
-                          //}
-
-                        },
+                        //{
+                        getDirections();
+                        //}
+                      },
                       child: Container(
                         decoration: BoxDecoration(
                             color: Colors.white,
@@ -365,7 +413,13 @@ class _MainPageState extends State<MainPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(Provider.of<AppData>(context).pickUpAddress!= null ? Provider.of<AppData>(context).pickUpAddress.placeAddress.substring(0,40) : 'Add Home'),
+                            Text(Provider.of<AppData>(context).pickUpAddress !=
+                                    null
+                                ? Provider.of<AppData>(context)
+                                    .pickUpAddress
+                                    .placeAddress
+                                    .substring(0, 40)
+                                : 'Add Home'),
                             Text(
                               'Yor residence address',
                               style: TextStyle(
@@ -410,6 +464,120 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ],
                 ),
+              ),
+            ),
+          ),
+
+          //
+          Positioned(
+            left: 0,
+            bottom: 0,
+            right: 0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  Container(
+                    height: 270,
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(15),
+                            topRight: Radius.circular(15)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            spreadRadius: .5,
+                            blurRadius: .5,
+                            offset: Offset(.7, .7),
+                          )
+                        ]),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(top: 20),
+                          child: Container(
+                            width: double.infinity,
+                            color: Colors.tealAccent,
+                            child: Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: Row(
+                                children: [
+                                  Image.asset(
+                                    'assetes/images/taxi.png',
+                                    height: 70,
+                                    width: 70,
+                                  ),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'TAXI',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontFamily: 'BoltSemi'),
+                                      ),
+                                      Text(
+                                        '14Km',
+                                        style: TextStyle(
+                                            fontSize: 15,
+                                            fontFamily: 'BoltSemi'),
+                                      )
+                                    ],
+                                  ),
+                                  Expanded(child: Container()),
+                                  Text(
+                                    'Rs 130',
+                                    style: TextStyle(
+                                        fontSize: 15, fontFamily: 'BoltSemi'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 10,),
+                        Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Row(
+                            children: [
+                              Icon(FontAwesomeIcons.creditCard,size: 18,color: BrandColors.colorTextLight,),
+                              SizedBox(
+                                width: 16,
+                              ),
+                              Text(
+                                'CASH',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontFamily: 'BoltSemi'),
+                              ),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Icon(Icons.keyboard_arrow_down,size: 18,color: BrandColors.colorTextLight,),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10,),
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16,horizontal: 16),
+                          child: RoundButton(
+                              'REQUEST CAB',
+                            BrandColors.colorGreen,
+                              (){}
+
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+
+
+                ],
               ),
             ),
           ),
