@@ -1,4 +1,6 @@
 import 'package:cab_rider/dataprovoder/appdata.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:provider/provider.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -7,8 +9,45 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/address.dart';
 import '../models/directionetials.dart';
+import '../models/users.dart' as appusers;
+import '../dataprovoder/appdata.dart';
 
 class HelperMethod {
+
+  static void getCurrentUserInfo(context) async{
+
+    AppData appData =  AppData();
+    try {
+      var user = await FirebaseAuth.instance.currentUser;
+      String userID = user.uid;
+      DatabaseReference userRef = FirebaseDatabase.instance.reference().child('user/$userID');
+      userRef.once().then((DataSnapshot snapshot) {
+        if(snapshot.value!=null)
+        {
+          //appusers.User currentUserInfo = appusers.User.fromSnapshot(snapshot);
+          appusers.User currentUserInfo = appusers.User();
+          currentUserInfo.id = snapshot.key;
+          currentUserInfo.fullName = snapshot.value['fullname'];
+          currentUserInfo.phone = snapshot.value['phoene'];
+          currentUserInfo.email = snapshot.value['eamil'];
+          //   id = snapshot.key;
+          //   fullName = snapshot.value['fullname'];
+          //   phone = snapshot.value['phoene'];
+          //   email = snapshot.value['eamil'];
+
+          Provider.of<AppData>(context,listen: false).updateUserData(currentUserInfo);
+          print('My full ame ${currentUserInfo.fullName}');
+
+        }
+
+      });
+    }
+    catch(e){
+      print('from getting user $e');
+    }
+
+  }
+
   static Future<String> getLatLangAddres(LatLng pos, context) async {
     String placeAddress = '';
     ;

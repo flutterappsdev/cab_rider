@@ -50,7 +50,7 @@ class _SearchPageState extends State<SearchPage> {
 
         setState(() {
           destinationPredictionList = thisList;
-         // print(destinationPredictionList);
+          // print(destinationPredictionList);
         });
         //}
 
@@ -59,35 +59,37 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void getPlacesDetials(String placeID) async {
-    String url = 'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=AIzaSyBeGGR_m6OI1M9DSuPWq39cAmLpGtSZ4Vo';
+    String url =
+        'https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=AIzaSyBeGGR_m6OI1M9DSuPWq39cAmLpGtSZ4Vo';
     //print('placeid  $placeID');
     try {
       showDialog(
-          barrierDismissible: false,
-          context: context,
-      builder: (context) =>ProgressDialog('Please wait...'),);
+        barrierDismissible: false,
+        context: context,
+        builder: (context) => ProgressDialog('Please wait...'),
+      );
 
       var response = await http.get(url);
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         Navigator.pop(context);
         print(data);
-        Address thisAddress = Address(data['result']['formatted_address'], data['result']['geometry']['location']['lat'], data['result']['geometry']['location']['lng'], placeID, "");
+        Address thisAddress = Address(
+            data['result']['formatted_address'],
+            data['result']['geometry']['location']['lat'],
+            data['result']['geometry']['location']['lng'],
+            placeID,
+            "");
 
-        Provider.of<AppData>(context,listen: false).updateDestinationAddress(thisAddress);
-     //   print('Addresssss ${thisAddress.placeName}');
+        Provider.of<AppData>(context, listen: false)
+            .updateDestinationAddress(thisAddress);
+        //   print('Addresssss ${thisAddress.placeName}');
 
-        Navigator.pop(context,'getdirection');
-
+        Navigator.pop(context, 'getdirection');
       }
-    }
-
-    catch(e) {
+    } catch (e) {
       print(e.toString());
-
-}
-
-
+    }
   }
 
   @override
@@ -104,10 +106,11 @@ class _SearchPageState extends State<SearchPage> {
                 height: 200,
                 decoration: BoxDecoration(color: Colors.white, boxShadow: [
                   BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: .5,
-                      spreadRadius: .5,
-                      offset: Offset(.7, .7),)
+                    color: Colors.black26,
+                    blurRadius: .5,
+                    spreadRadius: .5,
+                    offset: Offset(.7, .7),
+                  )
                 ]),
                 child: Padding(
                   padding: EdgeInsets.only(top: 5, left: 20),
@@ -208,50 +211,54 @@ class _SearchPageState extends State<SearchPage> {
               SizedBox(
                 height: 2,
               ),
-              (destinationPredictionList.length>0) ?
-              Container(
-                height: 400,
-                child: Padding(
-                  padding: EdgeInsets.only(top: 20, bottom: 20),
-
-                  child: ListView.separated(
-                    padding: EdgeInsets.all(8),
-                    itemBuilder: (context, index) => Container(
-                      child: FlatButton(
-                        onPressed: (){
-                            getPlacesDetials(destinationPredictionList[index].placeId);
-                        },
-                        child: Row(
-                          children: [
-                            Icon(OMIcons.locationOn),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(destinationPredictionList[index].mainText,
-                                    softWrap: true,
-                                    overflow: TextOverflow.clip,
-                                    maxLines: 1,
-                                    style: TextStyle(fontSize: 16)),
-                                SizedBox(
-                                  height: 5,
-                                ),
-                                Text(
-                                    destinationPredictionList[index].secondryText,
-
-                                    overflow: TextOverflow.clip,
-                                    maxLines: 2,
-                                    style: TextStyle(fontSize: 12)),
-                              ],
-                            )
-                          ],
+              (destinationPredictionList.length > 0)
+                  ? Container(
+                      height: 400,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 20, bottom: 20),
+                        child: ListView.separated(
+                          padding: EdgeInsets.all(8),
+                          itemBuilder: (context, index) => Container(
+                            child: FlatButton(
+                              onPressed: () {
+                                getPlacesDetials(
+                                    destinationPredictionList[index].placeId);
+                              },
+                              child: Row(
+                                children: [
+                                  Icon(OMIcons.locationOn),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                          destinationPredictionList[index]
+                                              .mainText,
+                                          softWrap: true,
+                                          overflow: TextOverflow.clip,
+                                          maxLines: 1,
+                                          style: TextStyle(fontSize: 16)),
+                                      SizedBox(
+                                        height: 5,
+                                      ),
+                                      Text(
+                                          destinationPredictionList[index]
+                                              .secondryText,
+                                          overflow: TextOverflow.clip,
+                                          maxLines: 2,
+                                          style: TextStyle(fontSize: 12)),
+                                    ],
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                          separatorBuilder: (context, index) => BrandDivider(),
+                          itemCount: destinationPredictionList.length,
                         ),
                       ),
-                    ),
-                    separatorBuilder: (context, index) => BrandDivider(),
-                    itemCount: destinationPredictionList.length,
-                  ),
-                ),
-              ): Container()
+                    )
+                  : Container()
             ],
           ),
         ),

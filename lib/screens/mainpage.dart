@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:cab_rider/models/directionetials.dart';
 import 'package:cab_rider/screens/searchpage.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -52,6 +53,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
 
   DirectionDetails tripDirectionDetials;
 
+  DatabaseReference rederRef;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -61,6 +64,8 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     location.onLocationChanged.listen((LocationData cLoc) {
       currentLocation = cLoc;
     });
+
+    HelperMethod.getCurrentUserInfo(context);
   }
 
   void setUpPositionLocator() async {
@@ -210,6 +215,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       _marker.clear();
       _circle.clear();
       riderDetailsSheetHeight = 0;
+      requestingSheetHeight=0;
       bottomBoxHeight = Platform.isAndroid ? 260 : 280;
       mapBottompadding = Platform.isAndroid ? 280 : 270;
       drawerOpen = true;
@@ -225,7 +231,45 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       mapBottompadding = Platform.isAndroid ? 280 : 270;
       drawerOpen = true;
     });
+    createRiderRequest();
+  }
 
+  void createRiderRequest(){
+    rederRef = FirebaseDatabase.instance.reference().child('riderRequest').push();
+
+    var pickup = Provider.of<AppData>(context,listen: false).pickUpAddress;
+    var desti = Provider.of<AppData>(context,listen: false).destinatinAddress;
+    var userdata = Provider.of<AppData>(context,listen: false).userData;
+
+    Map pickupMap = {
+      'lat' : pickup.latitude,
+      'lng' :pickup.longitude,
+    };
+
+    Map destMap = {
+      'lat' : desti.latitude,
+      'lng' : desti.longitude,
+    };
+
+
+    Map riderMap = {
+     'crated_at' : DateTime.now().toString(),
+      'rider_name': userdata.fullName,
+      'rider_phone': userdata.phone,
+      'pickup_address' : pickup.placeAddress,
+      'destination_address' : desti.placeAddress,
+      'location' : pickupMap,
+      'destination' : destMap,
+      'payment_method' : 'card',
+      'drive_id' : 'waiting....'
+    };
+    print(riderMap);
+    rederRef.set(riderMap);
+  }
+
+  void cancelRideRequest(){
+    rederRef.remove();
+    resetSearch();
   }
 
   @override
@@ -708,9 +752,17 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                           borderRadius: BorderRadius.circular(25),
                           border: Border.all(width: 1,color: BrandColors.colorLightGrayFair)
                         ),
-                        child: Icon(Icons.close,size: 25,),
+                        child: GestureDetector(
+                            onTap: (){
+                              cancelRideRequest();
+                            },
+                            child: Icon(Icons.close,size: 25,)),
                       ),
-                      Text('Cancel Ride',style: TextStyle(fontSize: 13), )
+                      GestureDetector(
+                        onTap: (){
+                          cancelRideRequest();
+                        },
+                          child: Text('Cancel Ride',style: TextStyle(fontSize: 13), ))
                     ],
                   ),
                 ),
